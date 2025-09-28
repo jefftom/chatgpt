@@ -38,7 +38,14 @@ if ( $failures < 3 ) {
 return;
 }
 
-echo '<div class="notice notice-error"><p>' . esc_html__( 'WP Better Forms detected repeated email delivery issues in the last hour. Please review the email queue.', 'wp-betterforms' ) . '</p></div>';
+$dashboard_url = admin_url( 'index.php#bf-email-queue' );
+$message       = sprintf(
+/* translators: %s is the dashboard URL */
+__( 'WP Better Forms detected repeated email delivery issues in the last hour. Please review the <a href="%s">email queue dashboard</a>.', 'wp-betterforms' ),
+esc_url( $dashboard_url )
+);
+
+echo '<div class="notice notice-error"><p>' . wp_kses_post( $message ) . '</p></div>';
 }
 
 private function get_recent_failures(): int {

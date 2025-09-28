@@ -70,12 +70,14 @@ $nonce = wp_create_nonce( 'wp_rest' );
 
 $fields_markup = array_map( [ self::class, 'render_field' ], $fields );
 
-$honeypot = '<div class="bf-hp" aria-hidden="true"><label>' . esc_html__( 'Leave this field empty', 'wp-betterforms' ) . '</label><input type="text" name="bf_hp" tabindex="-1" autocomplete="off" value="" /></div>';
+$honeypot       = '<div class="bf-hp" aria-hidden="true"><label>' . esc_html__( 'Leave this field empty', 'wp-betterforms' ) . '</label><input type="text" name="bf_hp" tabindex="-1" autocomplete="off" value="" /></div>';
+$timing_inputs  = '<input type="hidden" name="bf_rendered_at" value="' . esc_attr( (string) time() ) . '" />';
+$timing_inputs .= '<input type="hidden" name="bf_elapsed" value="" />';
 
 $markup  = $style_block;
 $markup .= '<form class="bf-form bf-form--' . esc_attr( $form_id ) . '" id="' . esc_attr( $wrapper_id ) . '" data-form-id="' . esc_attr( $form_id ) . '" data-nonce="' . esc_attr( $nonce ) . '">';
 $markup .= implode( '', $fields_markup );
-$markup .= $honeypot;
+$markup .= $honeypot . $timing_inputs;
 $markup .= '<div class="bf-actions"><button type="submit" class="bf-submit">' . esc_html__( 'Submit', 'wp-betterforms' ) . '</button></div>';
 $markup .= '<div class="bf-messages" aria-live="polite" role="status"></div>';
 $markup .= '</form>';
