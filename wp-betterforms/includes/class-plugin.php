@@ -7,6 +7,7 @@
 
 namespace WP_BetterForms;
 
+use WP_BetterForms\Admin\Admin_Dashboard;
 use WP_BetterForms\Admin\Admin_Notices;
 use WP_BetterForms\Rest\Rest_Controller;
 use WP_BetterForms\Rendering\Renderer;
@@ -68,6 +69,7 @@ add_action( 'enqueue_block_editor_assets', [ $this, 'enqueue_block_editor_assets
 add_action( 'wp_enqueue_scripts', [ $this, 'enqueue_frontend_assets' ] );
 
 Admin_Notices::get_instance();
+Admin_Dashboard::get_instance();
 Scheduler::get_instance();
 }
 
