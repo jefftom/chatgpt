@@ -1,0 +1,68 @@
+.bf-form {
+display: grid;
+gap: var(--bf-gap, 1rem);
+background: var(--bf-bg, #fff);
+color: var(--bf-text, #111827);
+padding: var(--bf-padding, 1.5rem);
+border-radius: var(--bf-radius, 12px);
+border: 1px solid var(--bf-border, rgba(15, 23, 42, 0.1));
+}
+
+.bf-field label {
+display: block;
+font-weight: 600;
+color: var(--bf-label-color, inherit);
+margin-bottom: 0.35rem;
+}
+
+.bf-field input,
+.bf-field select,
+.bf-field textarea {
+width: 100%;
+padding: 0.75rem;
+border: 1px solid var(--bf-border, rgba(15, 23, 42, 0.2));
+border-radius: var(--bf-input-radius, 8px);
+background-color: var(--bf-input-bg, #fff);
+color: inherit;
+}
+
+.bf-field input:focus,
+.bf-field select:focus,
+.bf-field textarea:focus {
+outline: none;
+box-shadow: var(--bf-focus-ring, 0 0 0 2px rgba(37, 99, 235, 0.35));
+border-color: var(--bf-primary, #2563eb);
+}
+
+.bf-submit {
+background: var(--bf-primary, #2563eb);
+color: #fff;
+padding: 0.75rem 1.5rem;
+border: none;
+border-radius: var(--bf-button-radius, 999px);
+font-size: 1rem;
+cursor: pointer;
+}
+
+.bf-submit:focus {
+outline: none;
+box-shadow: var(--bf-focus-ring, 0 0 0 2px rgba(37, 99, 235, 0.35));
+}
+
+.bf-hp {
+position: absolute;
+height: 1px;
+width: 1px;
+overflow: hidden;
+clip: rect(0 0 0 0);
+}
+
+.bf-field-error {
+color: #b91c1c;
+font-size: 0.875rem;
+margin-top: 0.25rem;
+}
+
+.bf-messages {
+min-height: 1.25rem;
+}
