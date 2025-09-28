@@ -124,21 +124,23 @@ $presets = [
 return $presets[ $preset ] ?? $presets['default'];
 }
 
-private static function render_field( array $field ): string {
-$type        = $field['type'] ?? 'text';
-$key         = sanitize_key( $field['key'] ?? wp_unique_id( 'bf_field_' ) );
-$label       = esc_html( $field['label'] ?? ucfirst( $key ) );
-$required    = ! empty( $field['required'] );
+    private static function render_field( array $field ): string {
+        $type        = $field['type'] ?? 'text';
+        $key         = sanitize_key( $field['key'] ?? wp_unique_id( 'bf_field_' ) );
+        $label       = esc_html( $field['label'] ?? ucfirst( $key ) );
+        $required    = ! empty( $field['required'] );
 $required_attr = $required ? ' required' : '';
 $aria_required = $required ? ' aria-required="true"' : '';
 $description   = isset( $field['description'] ) ? '<p class="bf-description">' . esc_html( $field['description'] ) . '</p>' : '';
 
 $input = '';
 
-switch ( $type ) {
-case 'textarea':
-$input = '<textarea id="' . esc_attr( $key ) . '" name="' . esc_attr( $key ) . '"' . $required_attr . $aria_required . '></textarea>';
-break;
+        switch ( $type ) {
+            case 'repeater':
+                return self::render_repeater( $field );
+            case 'textarea':
+                $input = '<textarea id="' . esc_attr( $key ) . '" name="' . esc_attr( $key ) . '"' . $required_attr . $aria_required . '></textarea>';
+                break;
 case 'select':
 $options = array_map(
 static fn( $choice ): string => '<option value="' . esc_attr( $choice['value'] ?? '' ) . '">' . esc_html( $choice['label'] ?? '' ) . '</option>',
@@ -159,8 +161,101 @@ default:
 $input = '<input type="text" id="' . esc_attr( $key ) . '" name="' . esc_attr( $key ) . '"' . $required_attr . $aria_required . ' />';
 }
 
-return '<div class="bf-field bf-field--' . esc_attr( $type ) . '"><label for="' . esc_attr( $key ) . '">' . $label . '</label>' . $description . $input . '</div>';
-}
+        return '<div class="bf-field bf-field--' . esc_attr( $type ) . '"><label for="' . esc_attr( $key ) . '">' . $label . '</label>' . $description . $input . '</div>';
+    }
+
+    private static function render_repeater( array $field ): string {
+        $key      = sanitize_key( $field['key'] ?? wp_unique_id( 'bf_repeater_' ) );
+        $label    = esc_html( $field['label'] ?? ucfirst( $key ) );
+        $children = is_array( $field['fields'] ?? null ) ? $field['fields'] : [];
+        $rows     = is_array( $field['rows'] ?? null ) ? $field['rows'] : [];
+
+        if ( empty( $rows ) ) {
+            $rows[] = [];
+        }
+
+        $template_markup = self::render_repeater_row( $key, $children, '{{index}}', [], true );
+        $rows_markup     = '';
+
+        foreach ( $rows as $index => $values ) {
+            $rows_markup .= self::render_repeater_row( $key, $children, (string) $index, is_array( $values ) ? $values : [], false );
+        }
+
+        $template_attribute = esc_attr( $template_markup );
+
+        return '<div class="bf-field bf-field--repeater" data-bf-repeater="' . esc_attr( $key ) . '">' .
+            '<label>' . $label . '</label>' .
+            '<div class="bf-repeater__rows" data-bf-template="' . $template_attribute . '">' . $rows_markup . '</div>' .
+            '<button type="button" class="bf-repeater__add">' . esc_html__( 'Add row', 'wp-betterforms' ) . '</button>' .
+            '</div>';
+    }
+
+    private static function render_repeater_row( string $repeater_key, array $children, string $index, array $values, bool $is_template ): string {
+        $row_attributes = 'class="bf-repeater__row" data-bf-template-index="{{index}}"';
+
+        if ( ! $is_template ) {
+            $row_attributes .= ' data-bf-index="' . esc_attr( $index ) . '"';
+        }
+
+        $fields_markup = '';
+
+        foreach ( $children as $child ) {
+            $child_key    = sanitize_key( $child['key'] ?? wp_unique_id( 'bf_field_' ) );
+            $type         = $child['type'] ?? 'text';
+            $label        = esc_html( $child['label'] ?? ucfirst( $child_key ) );
+            $description  = isset( $child['description'] ) ? '<p class="bf-description">' . esc_html( $child['description'] ) . '</p>' : '';
+            $required     = ! empty( $child['required'] );
+            $required_attr = $required ? ' required' : '';
+            $aria_required = $required ? ' aria-required="true"' : '';
+
+            $id_template   = $repeater_key . '-{{index}}-' . $child_key;
+            $name_template = $repeater_key . '[{{index}}][' . $child_key . ']';
+
+            $id   = str_replace( '{{index}}', $index, $id_template );
+            $name = str_replace( '{{index}}', $index, $name_template );
+
+            $template_attributes = ' data-bf-template-id="' . esc_attr( $id_template ) . '" data-bf-template-name="' . esc_attr( $name_template ) . '"';
+            $label_attributes    = ' for="' . esc_attr( $id ) . '" data-bf-template-for="' . esc_attr( $id_template ) . '"';
+
+            $value = $values[ $child_key ] ?? '';
+
+            switch ( $type ) {
+                case 'textarea':
+                    $input = '<textarea id="' . esc_attr( $id ) . '" name="' . esc_attr( $name ) . '"' . $template_attributes . $required_attr . $aria_required . '>' . esc_textarea( (string) $value ) . '</textarea>';
+                    break;
+                case 'select':
+                    $options = array_map(
+                        static function ( $choice ) use ( $value ): string {
+                            $choice_value = $choice['value'] ?? '';
+                            $selected     = (string) $choice_value === (string) $value ? ' selected' : '';
+
+                            return '<option value="' . esc_attr( $choice_value ) . '"' . $selected . '>' . esc_html( $choice['label'] ?? '' ) . '</option>';
+                        },
+                        $child['choices'] ?? []
+                    );
+                    $input = '<select id="' . esc_attr( $id ) . '" name="' . esc_attr( $name ) . '"' . $template_attributes . $required_attr . $aria_required . '>' . implode( '', $options ) . '</select>';
+                    break;
+                case 'checkbox':
+                    $checked = ! empty( $value ) ? ' checked' : '';
+                    $input   = '<input type="checkbox" id="' . esc_attr( $id ) . '" name="' . esc_attr( $name ) . '" value="1"' . $template_attributes . $aria_required . $required_attr . $checked . ' />';
+                    break;
+                case 'number':
+                    $input = '<input type="number" id="' . esc_attr( $id ) . '" name="' . esc_attr( $name ) . '" value="' . esc_attr( (string) $value ) . '"' . $template_attributes . $required_attr . $aria_required . ' />';
+                    break;
+                case 'email':
+                    $input = '<input type="email" id="' . esc_attr( $id ) . '" name="' . esc_attr( $name ) . '" value="' . esc_attr( (string) $value ) . '" autocomplete="email"' . $template_attributes . $required_attr . $aria_required . ' />';
+                    break;
+                default:
+                    $input = '<input type="text" id="' . esc_attr( $id ) . '" name="' . esc_attr( $name ) . '" value="' . esc_attr( (string) $value ) . '"' . $template_attributes . $required_attr . $aria_required . ' />';
+            }
+
+            $fields_markup .= '<div class="bf-field bf-field--' . esc_attr( $type ) . '"><label' . $label_attributes . '>' . $label . '</label>' . $description . $input . '</div>';
+        }
+
+        $remove_button = '<button type="button" class="bf-repeater__remove">' . esc_html__( 'Remove', 'wp-betterforms' ) . '</button>';
+
+        return '<div ' . $row_attributes . '>' . $fields_markup . $remove_button . '</div>';
+    }
 
 public static function store_submission( array $form, array $data ): int {
 global $wpdb;

@@ -1,4 +1,5 @@
 import './styles.css';
+import { serializeForm } from './modules/repeater';
 
 declare global {
 interface Window {
@@ -29,8 +30,8 @@ submitButton?.setAttribute('disabled', 'true');
 
 const formId = form.dataset.formId;
 const nonce = form.dataset.nonce ?? window.wpBetterFormsRuntime?.nonce ?? '';
-const data = Object.fromEntries(new FormData(form).entries());
-delete (data as Record<string, unknown>).bf_hp;
+  const data = serializeForm(form);
+  delete (data as Record<string, unknown>).bf_hp;
 
 try {
 const response = await fetch(`${window.wpBetterFormsRuntime.root}/${formId}`, {
