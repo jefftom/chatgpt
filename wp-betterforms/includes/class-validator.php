@@ -16,7 +16,7 @@ final class Validator {
 /**
  * Validate submission payload.
  */
-public static function validate_submission( array $form, array $data ): true|WP_Error {
+public static function validate_submission( array $form, array $data ): bool|WP_Error {
 $schema = $form['schema'] ?? [];
 $errors = [];
 

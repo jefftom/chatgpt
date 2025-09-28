@@ -283,7 +283,7 @@ Logger::log( 'email', 'info', 'Dashboard test email queued.', [ 'to' => $to ] );
 return new WP_REST_Response( [ 'success' => true ] );
 }
 
-private function check_honeypot( array $data, array $form, WP_REST_Request $request ): true|WP_Error {
+private function check_honeypot( array $data, array $form, WP_REST_Request $request ): bool|WP_Error {
 if ( ! empty( $data['bf_hp'] ) ) {
 Logger::log( 'spam', 'warning', 'Honeypot field triggered.', [ 'form_id' => $form['id'] ?? null ] );
 
@@ -318,7 +318,7 @@ return new WP_Error( 'bf_fast_submission', __( 'Form submitted too quickly.', 'w
 return true;
 }
 
-private function enforce_rate_limit( WP_REST_Request $request, array $form ): true|WP_Error {
+private function enforce_rate_limit( WP_REST_Request $request, array $form ): bool|WP_Error {
 $ip = $this->get_client_ip( $request );
 
 if ( ! $ip ) {
@@ -341,7 +341,7 @@ set_transient( $key, $count + 1, $window );
 return true;
 }
 
-private function verify_captcha( array $data, array $form, WP_REST_Request $request ): true|WP_Error {
+private function verify_captcha( array $data, array $form, WP_REST_Request $request ): bool|WP_Error {
 $captcha_meta = $data['_captcha'] ?? [];
 $provider     = $captcha_meta['provider'] ?? $form['integrations']['captcha']['provider'] ?? null;
 $token        = $captcha_meta['token'] ?? null;
@@ -368,7 +368,7 @@ return new WP_Error( 'bf_captcha_failed', __( 'Captcha validation failed. Please
 return true;
 }
 
-private function check_spam_filters( array $data, array $form, WP_REST_Request $request ): true|WP_Error {
+private function check_spam_filters( array $data, array $form, WP_REST_Request $request ): bool|WP_Error {
 $akismet_payload = apply_filters(
 'wp_betterforms/akismet_payload',
 [
